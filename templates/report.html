@@ -14,16 +14,13 @@
   --text-muted: #94a3b8;
   --accent: #22d3ee;
 }
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
 }
-
 .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 
 header {
@@ -32,27 +29,17 @@ header {
   border-bottom: 1px solid var(--border);
   margin-bottom: 2rem;
 }
-
 header h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; }
 header h1 span { color: var(--accent); }
 header p { color: var(--text-muted); margin-top: 0.5rem; }
 
 .stats-bar {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-  margin: 1.5rem 0;
-  flex-wrap: wrap;
+  display: flex; gap: 2rem; justify-content: center;
+  margin: 1.5rem 0; flex-wrap: wrap;
 }
-
 .stat-item { text-align: center; }
 .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); }
-.stat-label {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+.stat-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
 section {
   background: var(--surface);
@@ -61,124 +48,106 @@ section {
   padding: 1.5rem;
   margin-bottom: 2rem;
 }
-
 section h2 {
-  font-size: 1.3rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
+  font-size: 1.3rem; margin-bottom: 1rem;
+  padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
 }
+.section-note { font-weight: 400; font-size: 0.8rem; color: var(--text-muted); margin-left: 0.5rem; }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-th, td {
-  padding: 0.6rem 0.8rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-
-th {
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-tr:hover { background: rgba(255,255,255,0.03); }
-
-th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
-th.sortable:hover { color: var(--accent); }
-th.sortable::after { content: ' \2195'; opacity: 0.3; font-size: 0.75em; }
-th.sortable.asc::after { content: ' \2191'; opacity: 1; }
-th.sortable.desc::after { content: ' \2193'; opacity: 1; }
-
-.dr-badge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.charts-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
+/* Grid layouts */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+.col-label { font-size: .85rem; color: var(--text-muted); margin-bottom: .75rem; }
 
 .chart-container { position: relative; height: 300px; }
+.chart-sm        { position: relative; height: 220px; }
+.chart-md        { position: relative; height: 260px; }
 
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
+th {
+  color: var(--text-muted); font-weight: 600; font-size: 0.8rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+tr:hover { background: rgba(255,255,255,0.03); }
+th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortable:hover { color: var(--accent); }
+th.sortable::after       { content: ' \2195'; opacity: 0.3; font-size: 0.75em; }
+th.sortable.asc::after   { content: ' \2191'; opacity: 1; }
+th.sortable.desc::after  { content: ' \2193'; opacity: 1; }
+
+/* Heatmap */
+.heatmap-wrap { overflow-x: auto; }
+.heatmap { border-collapse: collapse; font-size: 0.8rem; min-width: 600px; }
+.heatmap th { background: none; font-size: 0.72rem; padding: 0.4rem 0.6rem; }
+.heatmap td { padding: 0; text-align: center; }
+.hm-cell {
+  display: flex; align-items: center; justify-content: center;
+  height: 38px; width: 88px; font-size: 0.78rem; font-weight: 600;
+  transition: opacity .15s;
+}
+.hm-cell:hover { opacity: .75; }
+.hm-lin { font-size: .78rem; padding: .4rem .8rem; white-space: nowrap; color: var(--text); }
+.hm-total { font-size: .72rem; color: var(--text-muted); padding: .4rem .5rem; text-align: right; }
+
+/* Map */
 .map-svg { width: 100%; height: auto; background: #020617; display: block; border-radius: 8px; }
-.map-svg path { fill: #1e3a50; stroke: #4a6a82; stroke-width: 0.5; transition: fill 0.15s; }
+.map-svg path { fill: #1e3a50; stroke: #4a6a82; stroke-width: 0.5; transition: fill .15s; }
 .map-svg path:hover { stroke: var(--accent); stroke-width: 1; }
 
 .legend {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.75rem;
-  flex-wrap: wrap;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  align-items: center;
+  display: flex; gap: 1rem; margin-top: .75rem;
+  flex-wrap: wrap; font-size: .8rem; color: var(--text-muted); align-items: center;
 }
-
-.legend-item { display: flex; align-items: center; gap: 0.3rem; }
+.legend-item { display: flex; align-items: center; gap: .3rem; }
 .legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 
+/* Tooltip */
 .tooltip {
-  position: fixed;
-  background: #0f172a;
-  border: 1px solid var(--border);
-  padding: 0.6rem 0.9rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  pointer-events: none;
-  display: none;
-  z-index: 200;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  position: fixed; background: #0f172a; border: 1px solid var(--border);
+  padding: .6rem .9rem; border-radius: 8px; font-size: .8rem;
+  pointer-events: none; display: none; z-index: 200;
+  white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,.5);
 }
-
-.tt-name { font-weight: 700; color: var(--accent); margin-bottom: 0.3rem; font-size: 0.9rem; }
+.tt-name { font-weight: 700; color: var(--accent); margin-bottom: .3rem; font-size: .9rem; }
 .tt-row { display: flex; justify-content: space-between; gap: 1.5rem; color: var(--text-muted); }
 .tt-row span:last-child { color: var(--text); font-weight: 600; }
 
-.pct-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; width: 80px; }
+/* Bars in centers table */
+.bar-wrap { display: flex; align-items: center; gap: .5rem; }
+.bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; }
+.bar-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+
+/* Pct bar in country table */
+.pct-bar  { height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; width: 80px; }
 .pct-fill { height: 100%; border-radius: 2px; }
 
-.timeline-placeholder {
+.placeholder {
   display: flex; align-items: center; justify-content: center;
-  height: 160px; color: var(--text-muted); flex-direction: column; gap: 0.5rem;
+  height: 160px; color: var(--text-muted); flex-direction: column; gap: .5rem;
 }
 
 footer {
-  text-align: center;
-  padding: 2rem 0;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  border-top: 1px solid var(--border);
+  text-align: center; padding: 2rem 0; color: var(--text-muted);
+  font-size: .8rem; border-top: 1px solid var(--border);
 }
 
 @media (max-width: 768px) {
   .container { padding: 1rem; }
   header h1 { font-size: 1.8rem; }
   .stats-bar { gap: 1rem; }
-  .charts-grid { grid-template-columns: 1fr; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
-
 <div class="container">
 
+  <!-- Header -->
   <header>
     <h1>TB<span>Watch</span></h1>
-    <p>Global Tuberculosis Genomic Surveillance &mdash; <em>M. tuberculosis</em> whole-genome sequencing data</p>
+    <p>Global Tuberculosis Genomic Surveillance &mdash; <em>M. tuberculosis</em> whole-genome sequencing</p>
     <div class="stats-bar">
       <div class="stat-item">
         <div class="stat-value">{{ total }}</div>
@@ -206,39 +175,93 @@ footer {
   <!-- Drug Resistance & Lineage -->
   <section>
     <h2>Genomic Profiles</h2>
-    <div class="charts-grid">
+    <div class="grid-2">
       <div>
-        <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem">Drug Resistance Classification</div>
+        <div class="col-label">Drug Resistance Classification</div>
         <div class="chart-container"><canvas id="drChart"></canvas></div>
       </div>
       <div>
-        <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.75rem">Lineage Distribution</div>
+        <div class="col-label">Lineage Distribution</div>
         <div class="chart-container"><canvas id="lineageChart"></canvas></div>
       </div>
+    </div>
+  </section>
+
+  <!-- Lineage × DR Heatmap -->
+  <section>
+    <h2>Lineage &times; Drug Resistance
+      <span class="section-note">— % of isolates within each lineage (rows)</span>
+    </h2>
+    <div class="heatmap-wrap">
+      <table class="heatmap" id="heatmap-table"></table>
     </div>
   </section>
 
   <!-- Timeline -->
   <section>
     <h2>Sequencing Timeline
-      {% if not has_timeline %}
-        <span style="font-weight:400;font-size:.8rem;color:var(--text-muted);margin-left:.5rem">
-          — run <code style="background:var(--bg);padding:.1rem .3rem;border-radius:3px">python fetch_metadata.py</code> to populate
-        </span>
+      {% if has_timeline %}
+        <span class="section-note">{{ year_coverage }} samples with NCBI collection dates</span>
       {% else %}
-        <span style="font-weight:400;font-size:.8rem;color:var(--text-muted);margin-left:.5rem">{{ year_coverage }} samples with collection dates</span>
+        <span class="section-note">— run <code style="background:var(--bg);padding:.1rem .3rem;border-radius:3px">python fetch_metadata.py</code> to populate</span>
       {% endif %}
     </h2>
     {% if has_timeline %}
-      <div class="chart-container" style="height:240px"><canvas id="timelineChart"></canvas></div>
+      <div class="chart-md"><canvas id="timelineChart"></canvas></div>
     {% else %}
-      <div class="timeline-placeholder">
+      <div class="placeholder">
         <div style="font-size:1.8rem;opacity:.3">📅</div>
         <div>Collection years not yet fetched from NCBI</div>
-        <div style="font-size:.75rem">Run <strong>fetch_metadata.py</strong> then rebuild to enable this chart</div>
       </div>
     {% endif %}
   </section>
+
+  <!-- Platform & Isolation Source -->
+  <section>
+    <h2>Sequencing Technology &amp; Sample Sources</h2>
+    <div class="grid-{% if has_source %}3{% else %}2{% endif %}">
+      <div>
+        <div class="col-label">Sequencing Platform</div>
+        {% if has_platform %}
+          <div class="chart-sm"><canvas id="platformChart"></canvas></div>
+        {% else %}
+          <div class="placeholder" style="height:160px"><div>No platform data yet</div></div>
+        {% endif %}
+      </div>
+      <div>
+        <div class="col-label">Sequencing Technology over Time</div>
+        {% if has_timeline and has_platform %}
+          <div class="chart-sm"><canvas id="platformTimeChart"></canvas></div>
+        {% else %}
+          <div class="placeholder" style="height:160px"><div>Requires timeline + platform data</div></div>
+        {% endif %}
+      </div>
+      {% if has_source %}
+      <div>
+        <div class="col-label">Isolation Source</div>
+        <div class="chart-sm"><canvas id="sourceChart"></canvas></div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Submitting Centres -->
+  {% if has_centers %}
+  <section>
+    <h2>Top Submitting Centres</h2>
+    <table id="centers-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Centre / Institution</th>
+          <th>Samples</th>
+          <th style="width:40%"></th>
+        </tr>
+      </thead>
+      <tbody id="centers-tbody"></tbody>
+    </table>
+  </section>
+  {% endif %}
 
   <!-- Map -->
   <section>
@@ -246,10 +269,10 @@ footer {
     <svg id="world-map" class="map-svg" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="legend">
       <span>Samples per country:</span>
-      <div class="legend-item"><div class="legend-swatch" style="background:#1e3a50"></div> No data</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:#0e4a7a"></div> Low</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:#0e6fad"></div> Medium</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:#22d3ee"></div> High</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#1e3a50"></div>No data</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#0e4a7a"></div>Low</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#0e6fad"></div>Medium</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#22d3ee"></div>High</div>
     </div>
   </section>
 
@@ -272,41 +295,46 @@ footer {
   </section>
 
   <footer>
-    TB Watch &mdash; Tuberculosis Genomic Surveillance &bull; Data from TB-Profiler
+    TB Watch &mdash; Tuberculosis Genomic Surveillance &bull; Data from TB-Profiler / NCBI SRA
   </footer>
-
 </div><!-- /container -->
 
 <div class="tooltip" id="mtt"></div>
 
 <script>
-const DR_CHART  = {{ dr_chart_json | safe }};
-const LIN_CHART = {{ lineage_chart_json | safe }};
-const CMAP      = {{ country_map_json | safe }};
-const SVG_PATHS = {{ svg_paths_json | safe }};
-const CDR       = {{ country_dr_json | safe }};
-const NAMES     = {{ iso3_names_json | safe }};
-const DR_ORDER  = {{ dr_order_json | safe }};
-const DR_COLORS = {{ dr_colors_json | safe }};
-const MAX_CT    = {{ max_country }};
-const CTABLE    = {{ top_countries | tojson }};
-const HAS_TL    = {{ 'true' if has_timeline else 'false' }};
-const TIMELINE  = {{ timeline_json | safe }};
+const DR_CHART   = {{ dr_chart_json | safe }};
+const LIN_CHART  = {{ lineage_chart_json | safe }};
+const PLT_CHART  = {{ platform_chart_json | safe }};
+const SRC_CHART  = {{ source_chart_json | safe }};
+const SRC_COLORS = {{ source_colors_json | safe }};
+const CENTERS    = {{ top_centers_json | safe }};
+const HEATMAP    = {{ heatmap_json | safe }};
+const CMAP       = {{ country_map_json | safe }};
+const SVG_PATHS  = {{ svg_paths_json | safe }};
+const CDR        = {{ country_dr_json | safe }};
+const NAMES      = {{ iso3_names_json | safe }};
+const DR_ORDER   = {{ dr_order_json | safe }};
+const DR_COLORS  = {{ dr_colors_json | safe }};
+const MAX_CT     = {{ max_country }};
+const CTABLE     = {{ top_countries | tojson }};
+const HAS_TL     = {{ 'true' if has_timeline else 'false' }};
+const TIMELINE   = {{ timeline_json | safe }};
 
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.borderColor = '#334155';
 
+/* ── helpers ── */
+function mkChart(id, cfg) {
+  const el = document.getElementById(id);
+  if (el) return new Chart(el, cfg);
+}
+
 /* ── DR Donut ── */
-new Chart(document.getElementById('drChart'), {
+mkChart('drChart', {
   type: 'doughnut',
   data: {
     labels: DR_CHART.map(d => d.label),
-    datasets: [{
-      data: DR_CHART.map(d => d.count),
-      backgroundColor: DR_CHART.map(d => d.color),
-      borderWidth: 2,
-      borderColor: '#1e293b',
-    }]
+    datasets: [{ data: DR_CHART.map(d => d.count), backgroundColor: DR_CHART.map(d => d.color), borderWidth: 2, borderColor: '#1e293b' }]
   },
   options: {
     responsive: true, maintainAspectRatio: false, cutout: '58%',
@@ -314,29 +342,22 @@ new Chart(document.getElementById('drChart'), {
       legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12, color: '#94a3b8' } },
       tooltip: { callbacks: { label: ctx => {
         const tot = DR_CHART.reduce((a, d) => a + d.count, 0);
-        return ` ${ctx.label}: ${ctx.parsed.toLocaleString()} (${(ctx.parsed / tot * 100).toFixed(1)}%)`;
+        return ` ${ctx.label}: ${ctx.parsed.toLocaleString()} (${(ctx.parsed/tot*100).toFixed(1)}%)`;
       }}}
     }
   }
 });
 
 /* ── Lineage Bar ── */
-new Chart(document.getElementById('lineageChart'), {
+mkChart('lineageChart', {
   type: 'bar',
   data: {
     labels: LIN_CHART.map(d => d.label),
-    datasets: [{
-      data: LIN_CHART.map(d => d.count),
-      backgroundColor: LIN_CHART.map(d => d.color),
-      borderRadius: 3,
-    }]
+    datasets: [{ data: LIN_CHART.map(d => d.count), backgroundColor: LIN_CHART.map(d => d.color), borderRadius: 3 }]
   },
   options: {
     responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-    plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} samples` } }
-    },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} samples` }}},
     scales: {
       x: { grid: { color: '#334155' }, ticks: { font: { size: 10 } } },
       y: { grid: { display: false }, ticks: { font: { size: 11 } } }
@@ -344,21 +365,50 @@ new Chart(document.getElementById('lineageChart'), {
   }
 });
 
-/* ── Timeline ── */
+/* ── Platform Donut ── */
+mkChart('platformChart', {
+  type: 'doughnut',
+  data: {
+    labels: PLT_CHART.map(d => d.label),
+    datasets: [{ data: PLT_CHART.map(d => d.count), backgroundColor: PLT_CHART.map(d => d.color), borderWidth: 2, borderColor: '#1e293b' }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 10, color: '#94a3b8' } },
+      tooltip: { callbacks: { label: ctx => {
+        const tot = PLT_CHART.reduce((a, d) => a + d.count, 0);
+        return ` ${ctx.label}: ${ctx.parsed.toLocaleString()} (${(ctx.parsed/tot*100).toFixed(1)}%)`;
+      }}}
+    }
+  }
+});
+
+/* ── Isolation Source Donut ── */
+mkChart('sourceChart', {
+  type: 'doughnut',
+  data: {
+    labels: SRC_CHART.map(d => d.label),
+    datasets: [{ data: SRC_CHART.map(d => d.count), backgroundColor: SRC_COLORS.slice(0, SRC_CHART.length), borderWidth: 2, borderColor: '#1e293b' }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 10, color: '#94a3b8' } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toLocaleString()}` }}
+    }
+  }
+});
+
+/* ── Timeline stacked bar ── */
 if (HAS_TL && TIMELINE.years) {
-  new Chart(document.getElementById('timelineChart'), {
+  mkChart('timelineChart', {
     type: 'bar',
     data: {
       labels: TIMELINE.years,
       datasets: DR_ORDER
         .filter(dr => TIMELINE.series[dr] && TIMELINE.series[dr].some(v => v > 0))
-        .map(dr => ({
-          label: dr,
-          data: TIMELINE.series[dr],
-          backgroundColor: DR_COLORS[dr],
-          stack: 'stack',
-          borderRadius: 2,
-        }))
+        .map(dr => ({ label: dr, data: TIMELINE.series[dr], backgroundColor: DR_COLORS[dr], stack: 'stack', borderRadius: 2 }))
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -374,6 +424,98 @@ if (HAS_TL && TIMELINE.years) {
   });
 }
 
+/* ── Lineage × DR Heatmap ── */
+(function() {
+  const tbl = document.getElementById('heatmap-table');
+  if (!tbl || !HEATMAP.lineages) return;
+
+  const drCols = HEATMAP.dr_types;
+  // DR label colours for headers
+  const hdrColors = drCols.map(d => DR_COLORS[d] || '#64748b');
+
+  // Colour a cell: white text on coloured bg, intensity = pct/max_in_col
+  const colMax = {};
+  drCols.forEach(dr => {
+    colMax[dr] = Math.max(...HEATMAP.lineages.map(l => HEATMAP.pct[l][dr] || 0));
+  });
+
+  function cellBg(dr, pct) {
+    if (!pct) return '#1e293b';
+    const baseColors = {
+      'Sensitive':   [22, 163, 74],
+      'HR-TB':       [202, 138, 4],
+      'RR-TB':       [234, 88, 12],
+      'MDR-TB':      [220, 38, 38],
+      'Pre-XDR-TB':  [153, 27, 27],
+      'XDR-TB':      [69, 10, 10],
+    };
+    const max = colMax[dr] || 1;
+    const t = Math.pow(pct / max, 0.5);
+    const [r, g, b] = baseColors[dr] || [100, 100, 100];
+    const bg_r = Math.round(30 + t * (r - 30));
+    const bg_g = Math.round(41 + t * (g - 41));
+    const bg_b = Math.round(59 + t * (b - 59));
+    return `rgb(${bg_r},${bg_g},${bg_b})`;
+  }
+
+  // Header row
+  const thead = tbl.createTHead();
+  const hr = thead.insertRow();
+  ['Lineage', ...drCols, 'n'].forEach((h, i) => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    if (i > 0 && i <= drCols.length) th.style.color = hdrColors[i - 1];
+    hr.appendChild(th);
+  });
+
+  // Data rows
+  const tbody = tbl.createTBody();
+  HEATMAP.lineages.forEach(lin => {
+    const tr = tbody.insertRow();
+    // Lineage label
+    const tdLin = tr.insertCell();
+    tdLin.className = 'hm-lin';
+    tdLin.innerHTML = `<strong>${lin}</strong>`;
+
+    // DR cells
+    drCols.forEach(dr => {
+      const pct = HEATMAP.pct[lin][dr] || 0;
+      const td  = tr.insertCell();
+      const div = document.createElement('div');
+      div.className = 'hm-cell';
+      div.style.background = cellBg(dr, pct);
+      div.style.color = pct > 2 ? '#fff' : '#475569';
+      div.title = `${lin} / ${dr}: ${pct}%`;
+      div.textContent = pct > 0 ? pct + '%' : '';
+      td.appendChild(div);
+    });
+
+    // Total
+    const tdN = tr.insertCell();
+    tdN.className = 'hm-total';
+    tdN.textContent = (HEATMAP.totals[lin] || 0).toLocaleString();
+  });
+})();
+
+/* ── Submitting Centres ── */
+(function() {
+  const tbody = document.getElementById('centers-tbody');
+  if (!tbody || !CENTERS.length) return;
+  const max = CENTERS[0].count;
+  CENTERS.forEach((c, i) => {
+    const tr = tbody.insertRow();
+    tr.innerHTML = `
+      <td style="color:var(--text-muted);font-size:.8rem">${i + 1}</td>
+      <td>${c.name}</td>
+      <td>${c.count.toLocaleString()}</td>
+      <td>
+        <div class="bar-wrap">
+          <div class="bar-bg"><div class="bar-fill" style="width:${(c.count/max*100).toFixed(1)}%"></div></div>
+        </div>
+      </td>`;
+  });
+})();
+
 /* ── World Map ── */
 (function() {
   const svg = document.getElementById('world-map');
@@ -382,10 +524,7 @@ if (HAS_TL && TIMELINE.years) {
   function logColor(n, mx) {
     if (!n) return null;
     const t = Math.pow(Math.log(n + 1) / Math.log(mx + 1), 0.6);
-    const r = Math.round(14  + t * (34  - 14));
-    const g = Math.round(58  + t * (211 - 58));
-    const b = Math.round(80  + t * (238 - 80));
-    return `rgb(${r},${g},${b})`;
+    return `rgb(${Math.round(14+t*20)},${Math.round(58+t*153)},${Math.round(80+t*158)})`;
   }
 
   Object.entries(SVG_PATHS).forEach(([iso, d]) => {
@@ -398,28 +537,25 @@ if (HAS_TL && TIMELINE.years) {
 
     path.addEventListener('mouseenter', () => {
       if (col) { path.style.stroke = '#22d3ee'; path.style.strokeWidth = '1'; }
-      const name = NAMES[iso] || iso.toUpperCase();
-      const dr = CDR[iso] || {};
+      const dr  = CDR[iso] || {};
       const tot = CMAP[iso] || 0;
       const res = (dr['MDR-TB']||0)+(dr['Pre-XDR-TB']||0)+(dr['XDR-TB']||0)+(dr['RR-TB']||0)+(dr['HR-TB']||0);
       tip.innerHTML = `
-        <div class="tt-name">${name}</div>
+        <div class="tt-name">${NAMES[iso] || iso.toUpperCase()}</div>
         <div class="tt-row"><span>Total</span><span>${tot.toLocaleString()}</span></div>
         <div class="tt-row"><span>Sensitive</span><span>${(dr.Sensitive||0).toLocaleString()}</span></div>
         <div class="tt-row"><span>HR-TB</span><span>${(dr['HR-TB']||0).toLocaleString()}</span></div>
         <div class="tt-row"><span>MDR-TB</span><span>${(dr['MDR-TB']||0).toLocaleString()}</span></div>
         <div class="tt-row"><span>Pre-XDR / XDR</span><span>${((dr['Pre-XDR-TB']||0)+(dr['XDR-TB']||0)).toLocaleString()}</span></div>
-        ${tot ? `<div class="tt-row" style="margin-top:.3rem;border-top:1px solid #334155;padding-top:.3rem"><span>% Resistant</span><span style="color:#22d3ee">${(res/tot*100).toFixed(1)}%</span></div>` : ''}
-      `;
+        ${tot ? `<div class="tt-row" style="margin-top:.3rem;border-top:1px solid #334155;padding-top:.3rem"><span>% Resistant</span><span style="color:#22d3ee">${(res/tot*100).toFixed(1)}%</span></div>` : ''}`;
       tip.style.display = 'block';
     });
     path.addEventListener('mousemove', e => {
-      tip.style.left = (e.clientX + 16 + 220 > window.innerWidth ? e.clientX - 240 : e.clientX + 16) + 'px';
+      tip.style.left = (e.clientX + 16 + 220 > window.innerWidth ? e.clientX - 250 : e.clientX + 16) + 'px';
       tip.style.top  = (e.clientY - 10) + 'px';
     });
     path.addEventListener('mouseleave', () => {
-      path.style.stroke = '#4a6a82';
-      path.style.strokeWidth = '0.5';
+      path.style.stroke = '#4a6a82'; path.style.strokeWidth = '0.5';
       tip.style.display = 'none';
     });
     svg.appendChild(path);
@@ -430,18 +566,16 @@ if (HAS_TL && TIMELINE.years) {
 (function() {
   const tbody = document.getElementById('ctbody');
   let sortCol = 'total', asc = false;
-  const data = CTABLE.map((r, i) => ({ ...r, _i: i + 1 }));
-
-  const pctColor = p =>
-    p < 10 ? '#4ade80' : p < 25 ? '#fcd34d' : p < 40 ? '#fb923c' : '#f87171';
+  const data  = CTABLE.map((r, i) => ({ ...r, _i: i + 1 }));
+  const pctCol = p => p < 10 ? '#4ade80' : p < 25 ? '#fcd34d' : p < 40 ? '#fb923c' : '#f87171';
 
   function render() {
     tbody.innerHTML = '';
     data.forEach((c, i) => {
-      const pc = pctColor(c.pct_resistant);
+      const pc = pctCol(c.pct_resistant);
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td style="color:var(--text-muted);font-size:.8rem">${i + 1}</td>
+        <td style="color:var(--text-muted);font-size:.8rem">${i+1}</td>
         <td><strong>${c.name}</strong> <span style="color:var(--text-muted);font-size:.75rem">${c.code.toUpperCase()}</span></td>
         <td>${c.total.toLocaleString()}</td>
         <td>${c.sensitive.toLocaleString()}</td>
@@ -457,18 +591,13 @@ if (HAS_TL && TIMELINE.years) {
   document.querySelectorAll('#ctable th.sortable').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
-      if (sortCol === col) asc = !asc;
-      else { sortCol = col; asc = col === 'name'; }
+      if (sortCol === col) asc = !asc; else { sortCol = col; asc = col === 'name'; }
       document.querySelectorAll('#ctable th').forEach(t => t.classList.remove('asc','desc'));
       th.classList.add(asc ? 'asc' : 'desc');
-      data.sort((a, b) => {
-        const va = a[col], vb = b[col];
-        return asc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
-      });
+      data.sort((a, b) => { const va=a[col], vb=b[col]; return asc?(va>vb?1:-1):(va<vb?1:-1); });
       render();
     });
   });
-
   render();
 })();
 </script>
