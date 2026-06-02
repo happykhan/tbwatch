@@ -110,8 +110,8 @@ def geojson_to_svg_paths(geojson, width=960, height=480):
     for feature in geojson['features']:
         props = feature.get('properties', {})
         iso = (
-            props.get('ISO_A3') or props.get('ADM0_A3') or
-            props.get('iso_a3', '')
+            props.get('ISO3166-1-Alpha-3') or props.get('ISO_A3') or
+            props.get('ADM0_A3') or props.get('iso_a3', '')
         ).lower().strip()
         if not iso or iso in ('-99', 'none', ''):
             continue
