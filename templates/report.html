@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TB Watch | Global Tuberculosis Genomic Surveillance</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--card:#fff;--navy:#1e3a5f;--teal:#0e6e8c;
+  --border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:inherit;text-decoration:none}
+
+/* Nav */
+nav{background:var(--navy);color:#fff;padding:.9rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.nav-logo{font-size:1.4rem;font-weight:800;letter-spacing:-0.5px}
+.nav-logo span{color:#60a5fa}
+.nav-sub{color:#93c5fd;font-size:.8rem;margin-top:.1rem}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+.badge{background:#dc2626;color:#fff;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:999px;letter-spacing:.05em}
+.badge.green{background:#16a34a}
+.nav-date{color:#7dd3fc;font-size:.75rem}
+
+main{max-width:1280px;margin:0 auto;padding:1.5rem 2rem}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem}
+.stat{background:var(--card);border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.07);border-top:3px solid transparent}
+.stat.blue{border-color:var(--teal)}
+.stat.green{border-color:#16a34a}
+.stat.red{border-color:#dc2626}
+.stat.purple{border-color:#7c3aed}
+.stat-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.4rem}
+.stat-value{font-size:2rem;font-weight:800;line-height:1}
+.stat.blue .stat-value{color:var(--teal)}
+.stat.green .stat-value{color:#16a34a}
+.stat.red .stat-value{color:#dc2626}
+.stat.purple .stat-value{color:#7c3aed}
+.stat-sub{font-size:.72rem;color:var(--muted);margin-top:.25rem}
+
+/* Card */
+.card{background:var(--card);border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:1.25rem}
+.card-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:1rem}
+
+/* Charts row */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+.chart-wrap{position:relative;height:300px}
+
+/* Map */
+.map-svg-wrap{position:relative;overflow:hidden;border-radius:8px;background:#f8fafc}
+#world-map{width:100%;height:auto;display:block}
+.map-tooltip{
+  position:fixed;background:rgba(15,23,42,.93);color:#fff;
+  padding:.65rem .9rem;border-radius:8px;font-size:.78rem;
+  pointer-events:none;display:none;z-index:200;max-width:220px;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+.tt-name{font-weight:700;font-size:.88rem;margin-bottom:.4rem;color:#e2e8f0}
+.tt-row{display:flex;justify-content:space-between;gap:.75rem;margin:.15rem 0}
+.tt-row .lbl{color:#94a3b8}
+.tt-row .val{font-weight:600}
+.map-legend{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:.72rem;color:var(--muted)}
+.legend-grad{width:140px;height:8px;border-radius:4px;background:linear-gradient(to right,#dbeafe,#1e3a8a)}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{
+  background:#f8fafc;font-weight:700;color:var(--muted);
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+  padding:.65rem 1rem;text-align:left;
+  border-bottom:2px solid var(--border);
+  cursor:pointer;user-select:none;white-space:nowrap
+}
+th:hover{color:var(--text)}
+th.sorted{color:var(--navy)}
+td{padding:.6rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.rank{color:var(--muted);font-size:.75rem;width:2rem}
+.cc{color:var(--muted);font-size:.72rem;margin-top:.1rem}
+.pct-bar{height:5px;background:#e2e8f0;border-radius:3px;margin-top:.3rem;width:80px}
+.pct-fill{height:100%;border-radius:3px}
+
+/* Timeline section */
+.timeline-placeholder{display:flex;align-items:center;justify-content:center;height:180px;color:var(--muted);font-size:.85rem;flex-direction:column;gap:.5rem}
+.timeline-placeholder .icon{font-size:2rem;opacity:.4}
+
+footer{text-align:center;padding:2rem;color:var(--muted);font-size:.75rem;border-top:1px solid var(--border);margin-top:1.5rem}
+</style>
+</head>
+<body>
+
+<nav>
+  <div>
+    <div class="nav-logo">TB<span>Watch</span></div>
+    <div class="nav-sub">Global Tuberculosis Genomic Surveillance</div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-date">{{ n_countries }} countries &bull; WGS isolates</span>
+    <span class="badge">LIVE DATA</span>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat blue">
+      <div class="stat-label">Total Samples</div>
+      <div class="stat-value">{{ total }}</div>
+      <div class="stat-sub">WGS-sequenced isolates</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-label">Countries</div>
+      <div class="stat-value">{{ n_countries }}</div>
+      <div class="stat-sub">with genomic data</div>
+    </div>
+    <div class="stat red">
+      <div class="stat-label">Drug Resistant</div>
+      <div class="stat-value">{{ n_resistant }}</div>
+      <div class="stat-sub">{{ pct_resistant }}% of all samples</div>
+    </div>
+    <div class="stat purple">
+      <div class="stat-label">Lineage Groups</div>
+      <div class="stat-value">{{ n_lineages }}</div>
+      <div class="stat-sub">major M. tuberculosis lineages</div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="charts-row">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Drug Resistance Profile</div>
+      <div class="chart-wrap"><canvas id="drChart"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Lineage Distribution</div>
+      <div class="chart-wrap"><canvas id="lineageChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="card">
+    <div class="card-title">Sequencing Timeline
+      {% if not has_timeline %}
+        <span style="font-weight:400;font-size:.78rem;color:var(--muted);margin-left:.5rem">
+          — run <code>python fetch_metadata.py</code> then <code>python generate_report.py</code> to populate
+        </span>
+      {% else %}
+        <span style="font-weight:400;font-size:.78rem;color:var(--muted);margin-left:.5rem">
+          {{ year_coverage }} samples with collection dates
+        </span>
+      {% endif %}
+    </div>
+    {% if has_timeline %}
+      <div class="chart-wrap" style="height:220px"><canvas id="timelineChart"></canvas></div>
+    {% else %}
+      <div class="timeline-placeholder">
+        <div class="icon">📅</div>
+        <div>Collection years not yet fetched from NCBI</div>
+        <div style="font-size:.75rem">Run <strong>fetch_metadata.py</strong> to enable this chart</div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Map -->
+  <div class="card">
+    <div class="card-title">Geographic Distribution</div>
+    <div class="map-svg-wrap">
+      <svg id="world-map" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="map-legend">
+      <span>0</span>
+      <div class="legend-grad"></div>
+      <span>{{ max_country }}</span>
+      <span style="margin-left:.75rem;color:#9ca3af">samples per country (log scale)</span>
+    </div>
+  </div>
+
+  <!-- Country table -->
+  <div class="card">
+    <div class="card-title">Top Countries by Sample Count</div>
+    <div class="table-wrap">
+      <table id="ctable">
+        <thead>
+          <tr>
+            <th class="rank">#</th>
+            <th data-col="name">Country</th>
+            <th data-col="total">Total</th>
+            <th data-col="sensitive">Sensitive</th>
+            <th data-col="resistant">Drug Resistant</th>
+            <th data-col="pct_resistant">% Resistant</th>
+          </tr>
+        </thead>
+        <tbody id="ctbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  TB Watch &mdash; Tuberculosis Genomic Surveillance Dashboard &bull; Data from TB-Profiler
+</footer>
+
+<div class="map-tooltip" id="mtt"></div>
+
+<script>
+const DR_CHART  = {{ dr_chart_json | safe }};
+const LIN_CHART = {{ lineage_chart_json | safe }};
+const CMAP      = {{ country_map_json | safe }};
+const SVG_PATHS = {{ svg_paths_json | safe }};
+const CDR       = {{ country_dr_json | safe }};
+const NAMES     = {{ iso3_names_json | safe }};
+const DR_ORDER  = {{ dr_order_json | safe }};
+const DR_COLORS = {{ dr_colors_json | safe }};
+const MAX_CT    = {{ max_country }};
+const CTABLE    = {{ top_countries | tojson }};
+const HAS_TL    = {{ 'true' if has_timeline else 'false' }};
+const TIMELINE  = {{ timeline_json | safe }};
+
+/* ── DR Donut ── */
+new Chart(document.getElementById('drChart'), {
+  type: 'doughnut',
+  data: {
+    labels: DR_CHART.map(d => d.label),
+    datasets: [{
+      data: DR_CHART.map(d => d.count),
+      backgroundColor: DR_CHART.map(d => d.color),
+      borderWidth: 2, borderColor: '#fff',
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } },
+      tooltip: { callbacks: { label: ctx => {
+        const tot = DR_CHART.reduce((a, d) => a + d.count, 0);
+        return ` ${ctx.label}: ${ctx.parsed.toLocaleString()} (${(ctx.parsed / tot * 100).toFixed(1)}%)`;
+      }}}
+    }
+  }
+});
+
+/* ── Lineage Bar ── */
+new Chart(document.getElementById('lineageChart'), {
+  type: 'bar',
+  data: {
+    labels: LIN_CHART.map(d => d.label),
+    datasets: [{
+      data: LIN_CHART.map(d => d.count),
+      backgroundColor: LIN_CHART.map(d => d.color),
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} samples` } }
+    },
+    scales: {
+      x: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+/* ── Timeline ── */
+if (HAS_TL && TIMELINE.years) {
+  const datasets = DR_ORDER
+    .filter(dr => TIMELINE.series[dr] && TIMELINE.series[dr].some(v => v > 0))
+    .map(dr => ({
+      label: dr,
+      data: TIMELINE.series[dr],
+      backgroundColor: DR_COLORS[dr],
+      stack: 'stack',
+      borderRadius: 2,
+    }));
+  new Chart(document.getElementById('timelineChart'), {
+    type: 'bar',
+    data: { labels: TIMELINE.years, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 10 } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { stacked: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+/* ── World Map ── */
+(function() {
+  const svg = document.getElementById('world-map');
+  const tip = document.getElementById('mtt');
+
+  function logColor(n, mx) {
+    if (!n) return '#e2e8f0';
+    const t = Math.log(n + 1) / Math.log(mx + 1);
+    const r = Math.round(219 - t * 189);
+    const g = Math.round(234 - t * 176);
+    const b = Math.round(254 - t * 116);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  Object.entries(SVG_PATHS).forEach(([iso, d]) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    const n = CMAP[iso] || 0;
+    path.style.cssText = `fill:${logColor(n, MAX_CT)};stroke:#9ca3af;stroke-width:0.4;cursor:${n ? 'pointer' : 'default'}`;
+
+    path.addEventListener('mouseenter', () => {
+      path.style.strokeWidth = '1.2';
+      path.style.stroke = '#374151';
+      path.style.opacity = '0.85';
+      const name = NAMES[iso] || iso.toUpperCase();
+      const dr = CDR[iso] || {};
+      const tot = CMAP[iso] || 0;
+      const res = (dr['MDR-TB']||0)+(dr['Pre-XDR-TB']||0)+(dr['XDR-TB']||0)+(dr['RR-TB']||0)+(dr['HR-TB']||0);
+      tip.innerHTML = `
+        <div class="tt-name">${name}</div>
+        <div class="tt-row"><span class="lbl">Total</span><span class="val">${tot.toLocaleString()}</span></div>
+        <div class="tt-row"><span class="lbl">Sensitive</span><span class="val">${(dr.Sensitive||0).toLocaleString()}</span></div>
+        <div class="tt-row"><span class="lbl">HR-TB</span><span class="val">${(dr['HR-TB']||0).toLocaleString()}</span></div>
+        <div class="tt-row"><span class="lbl">MDR-TB</span><span class="val">${(dr['MDR-TB']||0).toLocaleString()}</span></div>
+        <div class="tt-row"><span class="lbl">Pre-XDR / XDR</span><span class="val">${((dr['Pre-XDR-TB']||0)+(dr['XDR-TB']||0)).toLocaleString()}</span></div>
+        ${tot ? `<div class="tt-row" style="margin-top:.3rem;border-top:1px solid #334155;padding-top:.3rem"><span class="lbl">% Resistant</span><span class="val" style="color:#fca5a5">${(res/tot*100).toFixed(1)}%</span></div>` : ''}
+      `;
+      tip.style.display = 'block';
+    });
+    path.addEventListener('mousemove', e => {
+      const x = e.clientX + 16, y = e.clientY - 10;
+      tip.style.left = (x + 225 > window.innerWidth ? e.clientX - 240 : x) + 'px';
+      tip.style.top  = y + 'px';
+    });
+    path.addEventListener('mouseleave', () => {
+      path.style.strokeWidth = '0.4';
+      path.style.stroke = '#9ca3af';
+      path.style.opacity = '1';
+      tip.style.display = 'none';
+    });
+    svg.appendChild(path);
+  });
+})();
+
+/* ── Country Table ── */
+(function() {
+  const tbody = document.getElementById('ctbody');
+  let sortCol = 'total', asc = false;
+  let data = CTABLE.map((r, i) => ({ ...r, _i: i + 1 }));
+
+  const pctColor = p =>
+    p < 10 ? '#16a34a' : p < 25 ? '#ca8a04' : p < 40 ? '#ea580c' : '#dc2626';
+
+  function render() {
+    tbody.innerHTML = '';
+    data.forEach((c, i) => {
+      const pc = pctColor(c.pct_resistant);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="rank">${i + 1}</td>
+        <td><strong>${c.name}</strong><div class="cc">${c.code.toUpperCase()}</div></td>
+        <td>${c.total.toLocaleString()}</td>
+        <td>${c.sensitive.toLocaleString()}</td>
+        <td>${c.resistant.toLocaleString()}</td>
+        <td>
+          <span style="color:${pc};font-weight:700">${c.pct_resistant}%</span>
+          <div class="pct-bar"><div class="pct-fill" style="width:${Math.min(c.pct_resistant,100)}%;background:${pc}"></div></div>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.querySelectorAll('#ctable th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) asc = !asc;
+      else { sortCol = col; asc = col === 'name'; }
+      document.querySelectorAll('#ctable th').forEach(t => t.classList.remove('sorted'));
+      th.classList.add('sorted');
+      data.sort((a, b) => {
+        const va = a[col], vb = b[col];
+        return asc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+      });
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

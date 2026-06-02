@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TB Watch | Global Tuberculosis Genomic Surveillance</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--card:#fff;--navy:#1e3a5f;--teal:#0e6e8c;
+  --border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
+a{color:inherit;text-decoration:none}
+
+/* Nav */
+nav{background:var(--navy);color:#fff;padding:.9rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.nav-logo{font-size:1.4rem;font-weight:800;letter-spacing:-0.5px}
+.nav-logo span{color:#60a5fa}
+.nav-sub{color:#93c5fd;font-size:.8rem;margin-top:.1rem}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+.badge{background:#dc2626;color:#fff;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:999px;letter-spacing:.05em}
+.badge.green{background:#16a34a}
+.nav-date{color:#7dd3fc;font-size:.75rem}
+
+main{max-width:1280px;margin:0 auto;padding:1.5rem 2rem}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem}
+.stat{background:var(--card);border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.07);border-top:3px solid transparent}
+.stat.blue{border-color:var(--teal)}
+.stat.green{border-color:#16a34a}
+.stat.red{border-color:#dc2626}
+.stat.purple{border-color:#7c3aed}
+.stat-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.4rem}
+.stat-value{font-size:2rem;font-weight:800;line-height:1}
+.stat.blue .stat-value{color:var(--teal)}
+.stat.green .stat-value{color:#16a34a}
+.stat.red .stat-value{color:#dc2626}
+.stat.purple .stat-value{color:#7c3aed}
+.stat-sub{font-size:.72rem;color:var(--muted);margin-top:.25rem}
+
+/* Card */
+.card{background:var(--card);border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:1.25rem}
+.card-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:1rem}
+
+/* Charts row */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+.chart-wrap{position:relative;height:300px}
+
+/* Map */
+.map-svg-wrap{position:relative;overflow:hidden;border-radius:8px;background:#f8fafc}
+#world-map{width:100%;height:auto;display:block}
+.map-tooltip{
+  position:fixed;background:rgba(15,23,42,.93);color:#fff;
+  padding:.65rem .9rem;border-radius:8px;font-size:.78rem;
+  pointer-events:none;display:none;z-index:200;max-width:220px;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+.tt-name{font-weight:700;font-size:.88rem;margin-bottom:.4rem;color:#e2e8f0}
+.tt-row{display:flex;justify-content:space-between;gap:.75rem;margin:.15rem 0}
+.tt-row .lbl{color:#94a3b8}
+.tt-row .val{font-weight:600}
+.map-legend{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:.72rem;color:var(--muted)}
+.legend-grad{width:140px;height:8px;border-radius:4px;background:linear-gradient(to right,#dbeafe,#1e3a8a)}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{
+  background:#f8fafc;font-weight:700;color:var(--muted);
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+  padding:.65rem 1rem;text-align:left;
+  border-bottom:2px solid var(--border);
+  cursor:pointer;user-select:none;white-space:nowrap
+}
+th:hover{color:var(--text)}
+th.sorted{color:var(--navy)}
+td{padding:.6rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.rank{color:var(--muted);font-size:.75rem;width:2rem}
+.cc{color:var(--muted);font-size:.72rem;margin-top:.1rem}
+.pct-bar{height:5px;background:#e2e8f0;border-radius:3px;margin-top:.3rem;width:80px}
+.pct-fill{height:100%;border-radius:3px}
+
+/* Timeline section */
+.timeline-placeholder{display:flex;align-items:center;justify-content:center;height:180px;color:var(--muted);font-size:.85rem;flex-direction:column;gap:.5rem}
+.timeline-placeholder .icon{font-size:2rem;opacity:.4}
+
+footer{text-align:center;padding:2rem;color:var(--muted);font-size:.75rem;border-top:1px solid var(--border);margin-top:1.5rem}
+</style>
+</head>
+<body>
+
+<nav>
+  <div>
+    <div class="nav-logo">TB<span>Watch</span></div>
+    <div class="nav-sub">Global Tuberculosis Genomic Surveillance</div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-date">119 countries &bull; WGS isolates</span>
+    <span class="badge">LIVE DATA</span>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat blue">
+      <div class="stat-label">Total Samples</div>
+      <div class="stat-value">219,179</div>
+      <div class="stat-sub">WGS-sequenced isolates</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-label">Countries</div>
+      <div class="stat-value">119</div>
+      <div class="stat-sub">with genomic data</div>
+    </div>
+    <div class="stat red">
+      <div class="stat-label">Drug Resistant</div>
+      <div class="stat-value">80,785</div>
+      <div class="stat-sub">36.9% of all samples</div>
+    </div>
+    <div class="stat purple">
+      <div class="stat-label">Lineage Groups</div>
+      <div class="stat-value">13</div>
+      <div class="stat-sub">major M. tuberculosis lineages</div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="charts-row">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Drug Resistance Profile</div>
+      <div class="chart-wrap"><canvas id="drChart"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Lineage Distribution</div>
+      <div class="chart-wrap"><canvas id="lineageChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="card">
+    <div class="card-title">Sequencing Timeline
+      
+        <span style="font-weight:400;font-size:.78rem;color:var(--muted);margin-left:.5rem">
+          49 samples with collection dates
+        </span>
+      
+    </div>
+    
+      <div class="chart-wrap" style="height:220px"><canvas id="timelineChart"></canvas></div>
+    
+  </div>
+
+  <!-- Map -->
+  <div class="card">
+    <div class="card-title">Geographic Distribution</div>
+    <div class="map-svg-wrap">
+      <svg id="world-map" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="map-legend">
+      <span>0</span>
+      <div class="legend-grad"></div>
+      <span>5617</span>
+      <span style="margin-left:.75rem;color:#9ca3af">samples per country (log scale)</span>
+    </div>
+  </div>
+
+  <!-- Country table -->
+  <div class="card">
+    <div class="card-title">Top Countries by Sample Count</div>
+    <div class="table-wrap">
+      <table id="ctable">
+        <thead>
+          <tr>
+            <th class="rank">#</th>
+            <th data-col="name">Country</th>
+            <th data-col="total">Total</th>
+            <th data-col="sensitive">Sensitive</th>
+            <th data-col="resistant">Drug Resistant</th>
+            <th data-col="pct_resistant">% Resistant</th>
+          </tr>
+        </thead>
+        <tbody id="ctbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  TB Watch &mdash; Tuberculosis Genomic Surveillance Dashboard &bull; Data from TB-Profiler
+</footer>
+
+<div class="map-tooltip" id="mtt"></div>
+
+<script>
+const DR_CHART  = [{"label": "Sensitive", "count": 113301, "color": "#16a34a"}, {"label": "HR-TB", "count": 14975, "color": "#ca8a04"}, {"label": "RR-TB", "count": 4632, "color": "#ea580c"}, {"label": "MDR-TB", "count": 40202, "color": "#dc2626"}, {"label": "Pre-XDR-TB", "count": 19079, "color": "#991b1b"}, {"label": "XDR-TB", "count": 1897, "color": "#450a0a"}, {"label": "Other", "count": 25093, "color": "#6b7280"}];
+const LIN_CHART = [{"label": "lineage4", "count": 105928, "color": "#a855f7"}, {"label": "lineage2", "count": 64086, "color": "#ef4444"}, {"label": "lineage3", "count": 18250, "color": "#22c55e"}, {"label": "lineage1", "count": 17510, "color": "#3b82f6"}, {"label": "La1", "count": 10532, "color": "#64748b"}, {"label": "lineage6", "count": 1472, "color": "#14b8a6"}, {"label": "lineage5", "count": 665, "color": "#f59e0b"}, {"label": "La3", "count": 270, "color": "#cbd5e1"}, {"label": "La2", "count": 269, "color": "#94a3b8"}, {"label": "lineage7", "count": 80, "color": "#f97316"}, {"label": "M", "count": 75, "color": "#9ca3af"}, {"label": "lineage9", "count": 37, "color": "#9ca3af"}, {"label": "lineage8", "count": 5, "color": "#9ca3af"}];
+const CMAP      = {"nor": 240, "mex": 848, "arg": 685, "usa": 5485, "zwe": 159, "cod": 710, "kor": 660, "fra": 1014, "ind": 5617, "dnk": 1148, "chn": 1771, "gmb": 1885, "tun": 105, "esp": 452, "idn": 29, "che": 429, "npl": 75, "prt": 637, "aus": 1452, "irl": 612, "mda": 3962, "kaz": 1055, "zaf": 5303, "bgd": 1047, "per": 3139, "deu": 2783, "gha": 192, "gbr": 3656, "geo": 3833, "rou": 676, "tha": 1032, "ltu": 149, "twn": 964, "blr": 25, "mdg": 196, "tza": 780, "bel": 245, "nld": 2267, "rus": 1285, "bra": 963, "vnm": 1789, "eth": 302, "est": 81, "bwa": 148, "dom": 81, "nga": 198, "jpn": 628, "ita": 651, "mwi": 1837, "phl": 96, "bgr": 108, "rwa": 434, "mmr": 106, "mar": 77, "swe": 411, "mng": 123, "gtm": 21, "ukr": 1749, "fin": 46, "can": 276, "col": 171, "uga": 44, "mys": 54, "aze": 93, "lbn": 67, "isr": 248, "lva": 97, "mkd": 4, "png": 105, "pol": 109, "dji": 263, "omn": 69, "cmr": 91, "irn": 35, "zmb": 89, "tls": 19, "pan": 9, "khm": 80, "alb": 27, "hun": 15, "moz": 131, "tjk": 73, "dza": 12, "bdi": 3, "lka": 10, "svn": 14, "pak": 512, "ken": 82, "slv": 3, "sau": 3, "lao": 1, "kgz": 20, "srb": 5, "sle": 5, "egy": 1, "gab": 5, "bih": 4, "mne": 2, "eri": 14, "hrv": 4, "sgp": 6, "swz": 2, "irq": 1, "nzl": 64, "btn": 2, "ner": 1, "bfa": 1, "tur": 4, "mli": 3, "nam": 1, "sen": 3, "gin": 2, "gnb": 1, "som": 1, "ago": 2, "afg": 1, "caf": 1, "prk": 5, "nic": 1};
+const SVG_PATHS = {};
+const CDR       = {"nor": {"Other": 47, "Sensitive": 149, "HR-TB": 15, "MDR-TB": 17, "Pre-XDR-TB": 9, "RR-TB": 3}, "mex": {"Other": 643, "Sensitive": 116, "RR-TB": 12, "MDR-TB": 43, "HR-TB": 22, "Pre-XDR-TB": 11, "XDR-TB": 1}, "arg": {"Sensitive": 49, "MDR-TB": 501, "Pre-XDR-TB": 60, "XDR-TB": 4, "RR-TB": 20, "HR-TB": 30, "Other": 21}, "usa": {"Sensitive": 3934, "Other": 658, "HR-TB": 487, "MDR-TB": 253, "Pre-XDR-TB": 81, "RR-TB": 68, "XDR-TB": 4}, "zwe": {"RR-TB": 11, "Sensitive": 45, "HR-TB": 5, "Other": 2, "MDR-TB": 87, "Pre-XDR-TB": 8, "XDR-TB": 1}, "cod": {"MDR-TB": 530, "RR-TB": 36, "Sensitive": 105, "Other": 12, "Pre-XDR-TB": 15, "HR-TB": 12}, "kor": {"HR-TB": 45, "Sensitive": 189, "MDR-TB": 284, "Pre-XDR-TB": 99, "RR-TB": 12, "Other": 17, "XDR-TB": 14}, "fra": {"MDR-TB": 44, "Sensitive": 265, "Other": 666, "Pre-XDR-TB": 12, "HR-TB": 21, "XDR-TB": 4, "RR-TB": 2}, "ind": {"Sensitive": 2497, "MDR-TB": 828, "Pre-XDR-TB": 1279, "XDR-TB": 170, "RR-TB": 121, "Other": 344, "HR-TB": 378}, "dnk": {"Sensitive": 1108, "Other": 34, "RR-TB": 6}, "chn": {"Sensitive": 1020, "Other": 86, "MDR-TB": 389, "HR-TB": 71, "Pre-XDR-TB": 165, "XDR-TB": 18, "RR-TB": 22}, "gmb": {"Sensitive": 1282, "Other": 517, "HR-TB": 64, "RR-TB": 5, "MDR-TB": 17}, "tun": {"Sensitive": 41, "MDR-TB": 53, "Other": 2, "RR-TB": 2, "Pre-XDR-TB": 7}, "esp": {"Other": 295, "Sensitive": 144, "RR-TB": 2, "HR-TB": 11}, "idn": {"MDR-TB": 19, "RR-TB": 2, "Sensitive": 1, "Pre-XDR-TB": 6, "HR-TB": 1}, "che": {"Sensitive": 198, "HR-TB": 64, "MDR-TB": 87, "Other": 28, "Pre-XDR-TB": 31, "RR-TB": 16, "XDR-TB": 5}, "npl": {"Sensitive": 41, "Pre-XDR-TB": 14, "Other": 4, "MDR-TB": 12, "HR-TB": 4}, "prt": {"MDR-TB": 75, "Other": 185, "HR-TB": 31, "Sensitive": 318, "Pre-XDR-TB": 21, "RR-TB": 4, "XDR-TB": 3}, "aus": {"Sensitive": 1121, "Other": 130, "HR-TB": 124, "MDR-TB": 44, "RR-TB": 14, "Pre-XDR-TB": 18, "XDR-TB": 1}, "irl": {"MDR-TB": 41, "Sensitive": 467, "Pre-XDR-TB": 21, "Other": 49, "RR-TB": 14, "HR-TB": 20}, "mda": {"MDR-TB": 1226, "Sensitive": 1536, "Pre-XDR-TB": 494, "HR-TB": 338, "Other": 306, "XDR-TB": 38, "RR-TB": 24}, "kaz": {"MDR-TB": 587, "Pre-XDR-TB": 166, "HR-TB": 70, "Sensitive": 173, "XDR-TB": 31, "Other": 26, "RR-TB": 2}, "zaf": {"Sensitive": 1636, "MDR-TB": 1162, "Pre-XDR-TB": 1571, "HR-TB": 208, "Other": 137, "RR-TB": 411, "XDR-TB": 178}, "bgd": {"MDR-TB": 686, "Pre-XDR-TB": 140, "HR-TB": 63, "Sensitive": 32, "RR-TB": 99, "XDR-TB": 17, "Other": 10}, "per": {"MDR-TB": 766, "Sensitive": 1601, "HR-TB": 353, "Other": 176, "RR-TB": 72, "Pre-XDR-TB": 165, "XDR-TB": 6}, "deu": {"Sensitive": 832, "HR-TB": 149, "MDR-TB": 1363, "Pre-XDR-TB": 278, "Other": 114, "RR-TB": 31, "XDR-TB": 16}, "gha": {"Sensitive": 145, "Other": 25, "HR-TB": 16, "MDR-TB": 6}, "gbr": {"Sensitive": 2111, "HR-TB": 190, "Other": 1098, "MDR-TB": 120, "Pre-XDR-TB": 108, "RR-TB": 28, "XDR-TB": 1}, "geo": {"XDR-TB": 24, "Other": 56, "Pre-XDR-TB": 996, "MDR-TB": 2276, "Sensitive": 330, "HR-TB": 111, "RR-TB": 40}, "rou": {"MDR-TB": 373, "Pre-XDR-TB": 165, "Sensitive": 52, "RR-TB": 53, "HR-TB": 13, "XDR-TB": 18, "Other": 2}, "tha": {"Sensitive": 212, "Pre-XDR-TB": 154, "MDR-TB": 532, "HR-TB": 50, "RR-TB": 40, "Other": 44}, "ltu": {"Pre-XDR-TB": 31, "MDR-TB": 63, "Sensitive": 51, "HR-TB": 2, "XDR-TB": 1, "Other": 1}, "twn": {"MDR-TB": 447, "Sensitive": 145, "RR-TB": 130, "Pre-XDR-TB": 170, "HR-TB": 46, "Other": 19, "XDR-TB": 7}, "blr": {"MDR-TB": 8, "Pre-XDR-TB": 5, "Sensitive": 9, "RR-TB": 1, "HR-TB": 1, "Other": 1}, "mdg": {"Sensitive": 132, "MDR-TB": 42, "RR-TB": 4, "Other": 3, "HR-TB": 15}, "tza": {"Sensitive": 605, "Other": 55, "MDR-TB": 50, "HR-TB": 43, "RR-TB": 27}, "bel": {"Sensitive": 135, "Pre-XDR-TB": 12, "Other": 27, "HR-TB": 39, "MDR-TB": 29, "RR-TB": 2, "XDR-TB": 1}, "nld": {"Other": 232, "Sensitive": 1824, "RR-TB": 17, "HR-TB": 147, "MDR-TB": 39, "Pre-XDR-TB": 8}, "rus": {"Sensitive": 381, "MDR-TB": 460, "Pre-XDR-TB": 206, "XDR-TB": 17, "RR-TB": 36, "Other": 52, "HR-TB": 133}, "bra": {"RR-TB": 17, "MDR-TB": 253, "HR-TB": 78, "Sensitive": 478, "Pre-XDR-TB": 89, "Other": 46, "XDR-TB": 2}, "vnm": {"HR-TB": 269, "Sensitive": 932, "MDR-TB": 403, "Other": 133, "RR-TB": 20, "Pre-XDR-TB": 32}, "eth": {"MDR-TB": 192, "Sensitive": 81, "HR-TB": 3, "Other": 23, "Pre-XDR-TB": 2, "RR-TB": 1}, "est": {"HR-TB": 2, "Pre-XDR-TB": 21, "MDR-TB": 53, "Sensitive": 1, "RR-TB": 3, "XDR-TB": 1}, "bwa": {"Sensitive": 68, "RR-TB": 20, "HR-TB": 14, "MDR-TB": 44, "Other": 2}, "dom": {"Other": 81}, "nga": {"RR-TB": 32, "MDR-TB": 69, "Other": 27, "Sensitive": 61, "Pre-XDR-TB": 7, "HR-TB": 2}, "jpn": {"Sensitive": 409, "HR-TB": 25, "Other": 50, "Pre-XDR-TB": 71, "MDR-TB": 65, "RR-TB": 7, "XDR-TB": 1}, "ita": {"Other": 173, "Sensitive": 304, "XDR-TB": 4, "HR-TB": 35, "Pre-XDR-TB": 56, "MDR-TB": 70, "RR-TB": 9}, "mwi": {"Sensitive": 1635, "HR-TB": 103, "Other": 71, "MDR-TB": 25, "RR-TB": 3}, "phl": {"HR-TB": 11, "Pre-XDR-TB": 1, "MDR-TB": 35, "Sensitive": 41, "RR-TB": 5, "Other": 3}, "bgr": {"Pre-XDR-TB": 15, "RR-TB": 11, "MDR-TB": 46, "Sensitive": 15, "Other": 20, "XDR-TB": 1}, "rwa": {"MDR-TB": 328, "Sensitive": 77, "Other": 5, "RR-TB": 17, "HR-TB": 5, "Pre-XDR-TB": 2}, "mmr": {"Sensitive": 66, "MDR-TB": 13, "Other": 16, "HR-TB": 8, "Pre-XDR-TB": 3}, "mar": {"Sensitive": 26, "MDR-TB": 29, "Other": 3, "Pre-XDR-TB": 14, "HR-TB": 4, "XDR-TB": 1}, "swe": {"Sensitive": 47, "MDR-TB": 297, "Pre-XDR-TB": 40, "HR-TB": 8, "Other": 15, "RR-TB": 4}, "mng": {"HR-TB": 21, "Sensitive": 81, "MDR-TB": 13, "Other": 7, "Pre-XDR-TB": 1}, "gtm": {"Sensitive": 15, "HR-TB": 2, "Other": 4}, "ukr": {"Pre-XDR-TB": 464, "MDR-TB": 763, "Sensitive": 335, "Other": 42, "HR-TB": 89, "RR-TB": 28, "XDR-TB": 28}, "fin": {"Sensitive": 31, "MDR-TB": 6, "HR-TB": 5, "Other": 2, "Pre-XDR-TB": 2}, "can": {"HR-TB": 59, "Pre-XDR-TB": 2, "Sensitive": 206, "MDR-TB": 4, "Other": 5}, "col": {"Sensitive": 150, "HR-TB": 4, "MDR-TB": 11, "Other": 6}, "uga": {"Sensitive": 18, "MDR-TB": 4, "Other": 19, "RR-TB": 3}, "mys": {"Sensitive": 29, "MDR-TB": 18, "HR-TB": 1, "RR-TB": 4, "Pre-XDR-TB": 1, "Other": 1}, "aze": {"MDR-TB": 24, "Pre-XDR-TB": 42, "Sensitive": 8, "HR-TB": 9, "Other": 9, "RR-TB": 1}, "lbn": {"Other": 19, "Sensitive": 39, "Pre-XDR-TB": 3, "MDR-TB": 5, "HR-TB": 1}, "isr": {"Other": 31, "Sensitive": 146, "MDR-TB": 28, "Pre-XDR-TB": 19, "HR-TB": 24}, "lva": {"MDR-TB": 48, "Sensitive": 26, "RR-TB": 7, "Pre-XDR-TB": 15, "Other": 1}, "mkd": {"RR-TB": 1, "MDR-TB": 1, "Pre-XDR-TB": 2}, "png": {"MDR-TB": 85, "XDR-TB": 1, "Pre-XDR-TB": 3, "RR-TB": 4, "Sensitive": 10, "HR-TB": 2}, "pol": {"Sensitive": 55, "MDR-TB": 27, "Pre-XDR-TB": 8, "Other": 18, "XDR-TB": 1}, "dji": {"MDR-TB": 61, "Other": 61, "Sensitive": 120, "RR-TB": 10, "Pre-XDR-TB": 4, "HR-TB": 7}, "omn": {"Sensitive": 27, "MDR-TB": 3, "HR-TB": 24, "Other": 14, "RR-TB": 1}, "cmr": {"Other": 90, "Sensitive": 1}, "irn": {"MDR-TB": 7, "Pre-XDR-TB": 8, "Sensitive": 17, "Other": 3}, "zmb": {"Sensitive": 36, "MDR-TB": 34, "Other": 8, "RR-TB": 6, "Pre-XDR-TB": 2, "HR-TB": 3}, "tls": {"Sensitive": 18, "Other": 1}, "pan": {"Other": 5, "Sensitive": 4}, "khm": {"Sensitive": 65, "Other": 12, "HR-TB": 3}, "alb": {"Sensitive": 25, "MDR-TB": 1, "Pre-XDR-TB": 1}, "hun": {"Sensitive": 2, "HR-TB": 1, "XDR-TB": 4, "Pre-XDR-TB": 8}, "moz": {"Pre-XDR-TB": 6, "Sensitive": 84, "HR-TB": 16, "MDR-TB": 20, "Other": 5}, "tjk": {"MDR-TB": 42, "Pre-XDR-TB": 8, "HR-TB": 2, "Sensitive": 19, "RR-TB": 2}, "dza": {"Other": 12}, "bdi": {"MDR-TB": 3}, "lka": {"Sensitive": 5, "Other": 3, "XDR-TB": 1, "Pre-XDR-TB": 1}, "svn": {"HR-TB": 6, "MDR-TB": 6, "Pre-XDR-TB": 1, "RR-TB": 1}, "pak": {"XDR-TB": 103, "HR-TB": 15, "Pre-XDR-TB": 176, "MDR-TB": 148, "RR-TB": 19, "Sensitive": 23, "Other": 28}, "ken": {"MDR-TB": 18, "HR-TB": 4, "Sensitive": 59, "RR-TB": 1}, "slv": {"Sensitive": 2, "RR-TB": 1}, "sau": {"Sensitive": 2, "Pre-XDR-TB": 1}, "lao": {"Sensitive": 1}, "kgz": {"MDR-TB": 19, "Pre-XDR-TB": 1}, "srb": {"Sensitive": 5}, "sle": {"MDR-TB": 1, "Sensitive": 4}, "egy": {"Sensitive": 1}, "gab": {"Sensitive": 4, "Other": 1}, "bih": {"MDR-TB": 1, "HR-TB": 2, "RR-TB": 1}, "mne": {"Pre-XDR-TB": 1, "MDR-TB": 1}, "eri": {"Other": 14}, "hrv": {"MDR-TB": 4}, "sgp": {"MDR-TB": 6}, "swz": {"HR-TB": 1, "MDR-TB": 1}, "irq": {"MDR-TB": 1}, "nzl": {"Other": 25, "Sensitive": 34, "HR-TB": 2, "RR-TB": 3}, "btn": {"HR-TB": 1, "Sensitive": 1}, "ner": {"MDR-TB": 1}, "bfa": {"Sensitive": 1}, "tur": {"MDR-TB": 4}, "mli": {"Sensitive": 1, "Pre-XDR-TB": 1, "MDR-TB": 1}, "nam": {"Sensitive": 1}, "sen": {"Sensitive": 3}, "gin": {"Sensitive": 1, "Pre-XDR-TB": 1}, "gnb": {"MDR-TB": 1}, "som": {"MDR-TB": 1}, "ago": {"MDR-TB": 1, "Sensitive": 1}, "afg": {"RR-TB": 1}, "caf": {"Sensitive": 1}, "prk": {"Pre-XDR-TB": 2, "MDR-TB": 3}, "nic": {"Sensitive": 1}};
+const NAMES     = {"ind": "India", "usa": "United States", "zaf": "South Africa", "mda": "Moldova", "geo": "Georgia", "gbr": "United Kingdom", "per": "Peru", "deu": "Germany", "nld": "Netherlands", "gmb": "Gambia", "mwi": "Malawi", "vnm": "Vietnam", "chn": "China", "ukr": "Ukraine", "aus": "Australia", "rus": "Russia", "dnk": "Denmark", "kaz": "Kazakhstan", "bgd": "Bangladesh", "tha": "Thailand", "tun": "Tunisia", "nor": "Norway", "mex": "Mexico", "arg": "Argentina", "fra": "France", "kor": "South Korea", "cod": "DR Congo", "zwe": "Zimbabwe", "pak": "Pakistan", "phl": "Philippines", "bra": "Brazil", "eth": "Ethiopia", "ken": "Kenya", "mng": "Mongolia", "uga": "Uganda", "tza": "Tanzania", "ltu": "Lithuania", "est": "Estonia", "lva": "Latvia", "bel": "Belgium", "ita": "Italy", "esp": "Spain", "prt": "Portugal", "swe": "Sweden", "fin": "Finland", "che": "Switzerland", "aut": "Austria", "pol": "Poland", "rou": "Romania", "bgr": "Bulgaria", "npl": "Nepal", "lka": "Sri Lanka", "mmr": "Myanmar", "idn": "Indonesia", "mys": "Malaysia", "jpn": "Japan", "can": "Canada", "moz": "Mozambique", "zmb": "Zambia", "ago": "Angola", "cmr": "Cameroon", "gha": "Ghana", "nga": "Nigeria", "sen": "Senegal", "tur": "Turkey", "bwa": "Botswana", "lso": "Lesotho", "nam": "Namibia", "sle": "Sierra Leone", "aze": "Azerbaijan", "arm": "Armenia", "uzb": "Uzbekistan", "tjk": "Tajikistan", "kgz": "Kyrgyzstan", "blr": "Belarus", "cze": "Czechia", "hun": "Hungary", "srb": "Serbia", "svn": "Slovenia", "svk": "Slovakia", "hrv": "Croatia", "bih": "Bosnia & Herz.", "mkd": "North Macedonia", "twn": "Taiwan", "hkg": "Hong Kong", "sgp": "Singapore", "nzl": "New Zealand", "irn": "Iran", "irq": "Iraq", "zam": "Zambia", "swz": "Eswatini", "rwa": "Rwanda", "civ": "C\u00f4te d'Ivoire", "mrt": "Mauritania", "tgo": "Togo", "bfa": "Burkina Faso", "ner": "Niger", "mli": "Mali", "gnb": "Guinea-Bissau", "gni": "Guinea", "lbr": "Liberia", "ssd": "South Sudan", "som": "Somalia"};
+const DR_ORDER  = ["Sensitive", "HR-TB", "RR-TB", "MDR-TB", "Pre-XDR-TB", "XDR-TB", "Other"];
+const DR_COLORS = {"Sensitive": "#16a34a", "HR-TB": "#ca8a04", "RR-TB": "#ea580c", "MDR-TB": "#dc2626", "Pre-XDR-TB": "#991b1b", "XDR-TB": "#450a0a", "Other": "#6b7280"};
+const MAX_CT    = 5617;
+const CTABLE    = [{"code": "ind", "name": "India", "pct_resistant": 49.4, "resistant": 2776, "sensitive": 2497, "total": 5617}, {"code": "usa", "name": "United States", "pct_resistant": 16.3, "resistant": 893, "sensitive": 3934, "total": 5485}, {"code": "zaf", "name": "South Africa", "pct_resistant": 66.6, "resistant": 3530, "sensitive": 1636, "total": 5303}, {"code": "mda", "name": "Moldova", "pct_resistant": 53.5, "resistant": 2120, "sensitive": 1536, "total": 3962}, {"code": "geo", "name": "Georgia", "pct_resistant": 89.9, "resistant": 3447, "sensitive": 330, "total": 3833}, {"code": "gbr", "name": "United Kingdom", "pct_resistant": 12.2, "resistant": 447, "sensitive": 2111, "total": 3656}, {"code": "per", "name": "Peru", "pct_resistant": 43.4, "resistant": 1362, "sensitive": 1601, "total": 3139}, {"code": "deu", "name": "Germany", "pct_resistant": 66.0, "resistant": 1837, "sensitive": 832, "total": 2783}, {"code": "nld", "name": "Netherlands", "pct_resistant": 9.3, "resistant": 211, "sensitive": 1824, "total": 2267}, {"code": "gmb", "name": "Gambia", "pct_resistant": 4.6, "resistant": 86, "sensitive": 1282, "total": 1885}, {"code": "mwi", "name": "Malawi", "pct_resistant": 7.1, "resistant": 131, "sensitive": 1635, "total": 1837}, {"code": "vnm", "name": "Vietnam", "pct_resistant": 40.5, "resistant": 724, "sensitive": 932, "total": 1789}, {"code": "chn", "name": "China", "pct_resistant": 37.5, "resistant": 665, "sensitive": 1020, "total": 1771}, {"code": "ukr", "name": "Ukraine", "pct_resistant": 78.4, "resistant": 1372, "sensitive": 335, "total": 1749}, {"code": "aus", "name": "Australia", "pct_resistant": 13.8, "resistant": 201, "sensitive": 1121, "total": 1452}, {"code": "rus", "name": "Russia", "pct_resistant": 66.3, "resistant": 852, "sensitive": 381, "total": 1285}, {"code": "dnk", "name": "Denmark", "pct_resistant": 0.5, "resistant": 6, "sensitive": 1108, "total": 1148}, {"code": "kaz", "name": "Kazakhstan", "pct_resistant": 81.1, "resistant": 856, "sensitive": 173, "total": 1055}, {"code": "bgd", "name": "Bangladesh", "pct_resistant": 96.0, "resistant": 1005, "sensitive": 32, "total": 1047}, {"code": "tha", "name": "Thailand", "pct_resistant": 75.2, "resistant": 776, "sensitive": 212, "total": 1032}, {"code": "fra", "name": "France", "pct_resistant": 8.2, "resistant": 83, "sensitive": 265, "total": 1014}, {"code": "twn", "name": "Taiwan", "pct_resistant": 83.0, "resistant": 800, "sensitive": 145, "total": 964}, {"code": "bra", "name": "Brazil", "pct_resistant": 45.6, "resistant": 439, "sensitive": 478, "total": 963}, {"code": "mex", "name": "Mexico", "pct_resistant": 10.5, "resistant": 89, "sensitive": 116, "total": 848}, {"code": "tza", "name": "Tanzania", "pct_resistant": 15.4, "resistant": 120, "sensitive": 605, "total": 780}, {"code": "cod", "name": "DR Congo", "pct_resistant": 83.5, "resistant": 593, "sensitive": 105, "total": 710}, {"code": "arg", "name": "Argentina", "pct_resistant": 89.8, "resistant": 615, "sensitive": 49, "total": 685}, {"code": "rou", "name": "Romania", "pct_resistant": 92.0, "resistant": 622, "sensitive": 52, "total": 676}, {"code": "kor", "name": "South Korea", "pct_resistant": 68.8, "resistant": 454, "sensitive": 189, "total": 660}, {"code": "ita", "name": "Italy", "pct_resistant": 26.7, "resistant": 174, "sensitive": 304, "total": 651}];
+const HAS_TL    = true;
+const TIMELINE  = {"years": [1992, 1999, 2001, 2003, 2004, 2006, 2007, 2008, 2009, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023], "series": {"Sensitive": [0, 1, 1, 0, 1, 1, 0, 0, 0, 2, 1, 3, 0, 0, 5, 0, 4, 2, 1, 3, 1, 2], "HR-TB": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], "RR-TB": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "MDR-TB": [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 2, 1, 0, 2, 2, 1], "Pre-XDR-TB": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0], "XDR-TB": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Other": [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0]}, "colors": {"Sensitive": "#16a34a", "HR-TB": "#ca8a04", "RR-TB": "#ea580c", "MDR-TB": "#dc2626", "Pre-XDR-TB": "#991b1b", "XDR-TB": "#450a0a", "Other": "#6b7280"}};
+
+/* ── DR Donut ── */
+new Chart(document.getElementById('drChart'), {
+  type: 'doughnut',
+  data: {
+    labels: DR_CHART.map(d => d.label),
+    datasets: [{
+      data: DR_CHART.map(d => d.count),
+      backgroundColor: DR_CHART.map(d => d.color),
+      borderWidth: 2, borderColor: '#fff',
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } },
+      tooltip: { callbacks: { label: ctx => {
+        const tot = DR_CHART.reduce((a, d) => a + d.count, 0);
+        return ` ${ctx.label}: ${ctx.parsed.toLocaleString()} (${(ctx.parsed / tot * 100).toFixed(1)}%)`;
+      }}}
+    }
+  }
+});
+
+/* ── Lineage Bar ── */
+new Chart(document.getElementById('lineageChart'), {
+  type: 'bar',
+  data: {
+    labels: LIN_CHART.map(d => d.label),
+    datasets: [{
+      data: LIN_CHART.map(d => d.count),
+      backgroundColor: LIN_CHART.map(d => d.color),
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString()} samples` } }
+    },
+    scales: {
+      x: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+/* ── Timeline ── */
+if (HAS_TL && TIMELINE.years) {
+  const datasets = DR_ORDER
+    .filter(dr => TIMELINE.series[dr] && TIMELINE.series[dr].some(v => v > 0))
+    .map(dr => ({
+      label: dr,
+      data: TIMELINE.series[dr],
+      backgroundColor: DR_COLORS[dr],
+      stack: 'stack',
+      borderRadius: 2,
+    }));
+  new Chart(document.getElementById('timelineChart'), {
+    type: 'bar',
+    data: { labels: TIMELINE.years, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, boxWidth: 10 } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { stacked: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+/* ── World Map ── */
+(function() {
+  const svg = document.getElementById('world-map');
+  const tip = document.getElementById('mtt');
+
+  function logColor(n, mx) {
+    if (!n) return '#e2e8f0';
+    const t = Math.log(n + 1) / Math.log(mx + 1);
+    const r = Math.round(219 - t * 189);
+    const g = Math.round(234 - t * 176);
+    const b = Math.round(254 - t * 116);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  Object.entries(SVG_PATHS).forEach(([iso, d]) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    const n = CMAP[iso] || 0;
+    path.style.cssText = `fill:${logColor(n, MAX_CT)};stroke:#9ca3af;stroke-width:0.4;cursor:${n ? 'pointer' : 'default'}`;
+
+    path.addEventListener('mouseenter', () => {
+      path.style.strokeWidth = '1.2';
+      path.style.stroke = '#374151';
+      path.style.opacity = '0.85';
+      const name = NAMES[iso] || iso.toUpperCase();
+      const dr = CDR[iso] || {};
+      const tot = CMAP[iso] || 0;
+      const res = (dr['MDR-TB']||0)+(dr['Pre-XDR-TB']||0)+(dr['XDR-TB']||0)+(dr['RR-TB']||0)+(dr['HR-TB']||0);
+      tip.innerHTML = `
+        <div class="tt-name">${name}</div>
+        <div class="tt-row"><span class="lbl">Total</span><span class="val">${tot.toLocaleString()}</span></div>
+        <div class="tt-row"><span class="lbl">Sensitive</span><span class="val">${(dr.Sensitive||0).toLocaleString()}</span></div>
+        <div class="tt-row"><span class="lbl">HR-TB</span><span class="val">${(dr['HR-TB']||0).toLocaleString()}</span></div>
+        <div class="tt-row"><span class="lbl">MDR-TB</span><span class="val">${(dr['MDR-TB']||0).toLocaleString()}</span></div>
+        <div class="tt-row"><span class="lbl">Pre-XDR / XDR</span><span class="val">${((dr['Pre-XDR-TB']||0)+(dr['XDR-TB']||0)).toLocaleString()}</span></div>
+        ${tot ? `<div class="tt-row" style="margin-top:.3rem;border-top:1px solid #334155;padding-top:.3rem"><span class="lbl">% Resistant</span><span class="val" style="color:#fca5a5">${(res/tot*100).toFixed(1)}%</span></div>` : ''}
+      `;
+      tip.style.display = 'block';
+    });
+    path.addEventListener('mousemove', e => {
+      const x = e.clientX + 16, y = e.clientY - 10;
+      tip.style.left = (x + 225 > window.innerWidth ? e.clientX - 240 : x) + 'px';
+      tip.style.top  = y + 'px';
+    });
+    path.addEventListener('mouseleave', () => {
+      path.style.strokeWidth = '0.4';
+      path.style.stroke = '#9ca3af';
+      path.style.opacity = '1';
+      tip.style.display = 'none';
+    });
+    svg.appendChild(path);
+  });
+})();
+
+/* ── Country Table ── */
+(function() {
+  const tbody = document.getElementById('ctbody');
+  let sortCol = 'total', asc = false;
+  let data = CTABLE.map((r, i) => ({ ...r, _i: i + 1 }));
+
+  const pctColor = p =>
+    p < 10 ? '#16a34a' : p < 25 ? '#ca8a04' : p < 40 ? '#ea580c' : '#dc2626';
+
+  function render() {
+    tbody.innerHTML = '';
+    data.forEach((c, i) => {
+      const pc = pctColor(c.pct_resistant);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="rank">${i + 1}</td>
+        <td><strong>${c.name}</strong><div class="cc">${c.code.toUpperCase()}</div></td>
+        <td>${c.total.toLocaleString()}</td>
+        <td>${c.sensitive.toLocaleString()}</td>
+        <td>${c.resistant.toLocaleString()}</td>
+        <td>
+          <span style="color:${pc};font-weight:700">${c.pct_resistant}%</span>
+          <div class="pct-bar"><div class="pct-fill" style="width:${Math.min(c.pct_resistant,100)}%;background:${pc}"></div></div>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.querySelectorAll('#ctable th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) asc = !asc;
+      else { sortCol = col; asc = col === 'name'; }
+      document.querySelectorAll('#ctable th').forEach(t => t.classList.remove('sorted'));
+      th.classList.add('sorted');
+      data.sort((a, b) => {
+        const va = a[col], vb = b[col];
+        return asc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+      });
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
