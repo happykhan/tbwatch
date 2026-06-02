@@ -216,34 +216,15 @@ footer {
     {% endif %}
   </section>
 
-  <!-- Platform & Isolation Source -->
+  <!-- Isolation Source -->
+  {% if has_source %}
   <section>
-    <h2>Sequencing Technology &amp; Sample Sources</h2>
-    <div class="grid-{% if has_source %}3{% else %}2{% endif %}">
-      <div>
-        <div class="col-label">Sequencing Platform</div>
-        {% if has_platform %}
-          <div class="chart-sm"><canvas id="platformChart"></canvas></div>
-        {% else %}
-          <div class="placeholder" style="height:160px"><div>No platform data yet</div></div>
-        {% endif %}
-      </div>
-      <div>
-        <div class="col-label">Sequencing Technology over Time</div>
-        {% if has_timeline and has_platform %}
-          <div class="chart-sm"><canvas id="platformTimeChart"></canvas></div>
-        {% else %}
-          <div class="placeholder" style="height:160px"><div>Requires timeline + platform data</div></div>
-        {% endif %}
-      </div>
-      {% if has_source %}
-      <div>
-        <div class="col-label">Isolation Source</div>
-        <div class="chart-sm"><canvas id="sourceChart"></canvas></div>
-      </div>
-      {% endif %}
+    <h2>Isolation Source</h2>
+    <div style="max-width:360px;margin:0 auto">
+      <div class="chart-sm"><canvas id="sourceChart"></canvas></div>
     </div>
   </section>
+  {% endif %}
 
   <!-- Submitting Centres -->
   {% if has_centers %}
