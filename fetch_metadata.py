@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 BATCH_SIZE = 200
 RATE_LIMIT = 0.35
 CACHE_FILE = 'metadata/collection_years.json'
-CSV_PATH = 'test (1).csv'
+CSV_PATH = 'data.csv'
 
 
 def fetch_batch(ids):

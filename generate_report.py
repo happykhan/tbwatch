@@ -130,7 +130,7 @@ def geojson_to_svg_paths(geojson, width=960, height=480):
 
 
 def main():
-    csv_path = 'test (1).csv'
+    csv_path = 'data.csv'
     print(f'Reading {csv_path}...')
     samples = []
     with open(csv_path, newline='') as f:
