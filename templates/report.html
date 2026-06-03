@@ -57,7 +57,17 @@ section h2 {
 /* Grid layouts */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
-.col-label { font-size: .85rem; color: var(--text-muted); margin-bottom: .75rem; }
+.col-label { display:flex; justify-content:space-between; align-items:center; font-size: .85rem; color: var(--text-muted); margin-bottom: .75rem; }
+.dl-btn {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: 5px;
+  padding: .18rem .5rem; font-size: .7rem; cursor: pointer;
+  transition: color .15s, border-color .15s; white-space: nowrap;
+}
+.dl-btn:hover { color: var(--accent); border-color: var(--accent); }
+.h2-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:.5rem; border-bottom:1px solid var(--border); }
+.h2-row h2 { margin:0; padding:0; border:0; }
+.h2-row .section-note { font-weight:400; font-size:.8rem; color:var(--text-muted); margin-left:.5rem; }
 
 .chart-container { position: relative; height: 300px; }
 .chart-sm        { position: relative; height: 220px; }
@@ -178,11 +188,11 @@ footer {
     <h2>Genomic Profiles</h2>
     <div class="grid-2">
       <div>
-        <div class="col-label">Drug Resistance Classification</div>
+        <div class="col-label">Drug Resistance Classification <button class="dl-btn" onclick="downloadChart('drChart','tb_drug_resistance')">⬇ PNG</button></div>
         <div class="chart-container"><canvas id="drChart"></canvas></div>
       </div>
       <div>
-        <div class="col-label">Lineage Distribution</div>
+        <div class="col-label">Lineage Distribution <button class="dl-btn" onclick="downloadChart('lineageChart','tb_lineages')">⬇ PNG</button></div>
         <div class="chart-container"><canvas id="lineageChart"></canvas></div>
       </div>
     </div>
@@ -200,13 +210,16 @@ footer {
 
   <!-- Timeline -->
   <section>
-    <h2>Sequencing Timeline
-      {% if has_timeline %}
-        <span class="section-note">{{ year_coverage }} samples with NCBI collection dates</span>
-      {% else %}
-        <span class="section-note">— run <code style="background:var(--bg);padding:.1rem .3rem;border-radius:3px">python fetch_metadata.py</code> to populate</span>
-      {% endif %}
-    </h2>
+    <div class="h2-row">
+      <h2>Sequencing Timeline
+        {% if has_timeline %}
+          <span class="section-note">{{ year_coverage }} samples with NCBI collection dates</span>
+        {% else %}
+          <span class="section-note">— run <code style="background:var(--bg);padding:.1rem .3rem;border-radius:3px">python fetch_metadata.py</code> to populate</span>
+        {% endif %}
+      </h2>
+      {% if has_timeline %}<button class="dl-btn" onclick="downloadChart('timelineChart','tb_timeline')">⬇ PNG</button>{% endif %}
+    </div>
     {% if has_timeline %}
       <div class="chart-md"><canvas id="timelineChart"></canvas></div>
     {% else %}
@@ -220,7 +233,10 @@ footer {
   <!-- Isolation Source -->
   {% if has_source %}
   <section>
-    <h2>Isolation Source</h2>
+    <div class="h2-row">
+      <h2>Isolation Source</h2>
+      <button class="dl-btn" onclick="downloadChart('sourceChart','tb_isolation_source')">⬇ PNG</button>
+    </div>
     <div style="max-width:360px;margin:0 auto">
       <div class="chart-sm"><canvas id="sourceChart"></canvas></div>
     </div>
@@ -247,7 +263,10 @@ footer {
 
   <!-- Map -->
   <section>
-    <h2>Geographic Distribution</h2>
+    <div class="h2-row">
+      <h2>Geographic Distribution</h2>
+      <button class="dl-btn" onclick="downloadSVGAsPNG('world-map','tb_world_map',1920,960)">⬇ PNG</button>
+    </div>
     <svg id="world-map" class="map-svg" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="legend">
       <span>Samples per country:</span>
@@ -365,10 +384,52 @@ const TIMELINE   = {{ timeline_json | safe }};
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.borderColor = '#334155';
 
-/* ── helpers ── */
+/* ── PNG download helpers ── */
+const CHARTS = {};
+
 function mkChart(id, cfg) {
   const el = document.getElementById(id);
-  if (el) return new Chart(el, cfg);
+  if (!el) return null;
+  const chart = new Chart(el, cfg);
+  CHARTS[id] = chart;
+  return chart;
+}
+
+function downloadCanvas(canvas, name) {
+  const a = document.createElement('a');
+  a.download = name + '.png';
+  a.href = canvas.toDataURL('image/png', 1.0);
+  a.click();
+}
+
+function downloadChart(id, name) {
+  const chart = CHARTS[id];
+  if (chart) downloadCanvas(chart.canvas, name);
+}
+
+function downloadSVGAsPNG(svgId, name, w, h) {
+  const svg = document.getElementById(svgId);
+  const clone = svg.cloneNode(true);
+  // Embed a background rect so export isn't transparent
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%');
+  bg.setAttribute('fill', '#020617');
+  clone.insertBefore(bg, clone.firstChild);
+  const svgData = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const img  = new Image();
+  img.onload = function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = w || 1920; canvas.height = h || 960;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    downloadCanvas(canvas, name);
+  };
+  img.src = url;
 }
 
 /* ── DR Donut ── */
