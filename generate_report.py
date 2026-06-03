@@ -282,6 +282,34 @@ def main():
             'pct_resistant': round(res / cnt * 100, 1) if cnt else 0,
         })
 
+    # ── Export merged data CSV ───────────────────────────────────────────────
+    print('Writing data export...')
+    os.makedirs('build', exist_ok=True)
+    export_cols = ['id', 'country_code', 'country', 'drtype', 'lineage',
+                   'lineage_group', 'year', 'center', 'geo_loc', 'source',
+                   'instrument', 'avg_len', 'bases']
+    with open('build/data.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=export_cols, extrasaction='ignore')
+        writer.writeheader()
+        for s in samples:
+            m   = meta.get(s['id'], {})
+            cc  = s['country_code'].lower().strip()
+            writer.writerow({
+                'id':           s['id'],
+                'country_code': cc,
+                'country':      ISO3_NAMES.get(cc, cc.upper()) if cc != 'none' else '',
+                'drtype':       s['drtype'],
+                'lineage':      s['lineage'],
+                'lineage_group': get_top_lineage(s['lineage']),
+                'year':         m.get('year', ''),
+                'center':       m.get('center', ''),
+                'geo_loc':      m.get('geo_loc', ''),
+                'source':       m.get('source', ''),
+                'instrument':   m.get('instrument', ''),
+                'avg_len':      m.get('avg_len', ''),
+                'bases':        m.get('bases', ''),
+            })
+
     # ── GeoJSON → SVG paths ──────────────────────────────────────────────────
     print('Building map...')
     svg_paths = geojson_to_svg_paths(fetch_geojson())

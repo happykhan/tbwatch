@@ -275,6 +275,66 @@ footer {
     </table>
   </section>
 
+  <!-- Data Table -->
+  <section>
+    <h2>Sample Data
+      <a id="dl-link" href="data.csv" download style="
+        font-size:.8rem;font-weight:500;color:var(--accent);
+        border:1px solid var(--accent);border-radius:6px;
+        padding:.2rem .65rem;margin-left:.75rem;text-decoration:none;
+        vertical-align:middle;
+      ">⬇ Download CSV</a>
+    </h2>
+
+    <!-- Filters -->
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
+      <input id="tbl-search" type="search" placeholder="Search ID, country, lineage…" style="
+        background:var(--bg);color:var(--text);border:1px solid var(--border);
+        border-radius:6px;padding:.4rem .8rem;font-size:.85rem;width:260px;
+      ">
+      <select id="flt-dr" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.4rem .7rem;font-size:.85rem">
+        <option value="">All DR types</option>
+      </select>
+      <select id="flt-lin" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.4rem .7rem;font-size:.85rem">
+        <option value="">All lineages</option>
+      </select>
+      <select id="flt-cc" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.4rem .7rem;font-size:.85rem">
+        <option value="">All countries</option>
+      </select>
+      <span id="tbl-count" style="color:var(--text-muted);font-size:.82rem;margin-left:auto"></span>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table id="data-tbl">
+        <thead>
+          <tr>
+            <th class="sortable" data-col="0">Accession</th>
+            <th class="sortable" data-col="1">Country</th>
+            <th class="sortable" data-col="2">DR Type</th>
+            <th class="sortable" data-col="3">Lineage</th>
+            <th class="sortable" data-col="4">Lineage Group</th>
+            <th class="sortable" data-col="5">Year</th>
+            <th class="sortable" data-col="6">Centre</th>
+            <th class="sortable" data-col="7">Geo Location</th>
+            <th class="sortable" data-col="8">Source</th>
+            <th class="sortable" data-col="9">Instrument</th>
+            <th class="sortable" data-col="10">Avg Read Len</th>
+          </tr>
+        </thead>
+        <tbody id="data-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div style="display:flex;align-items:center;gap:.5rem;margin-top:1rem;flex-wrap:wrap">
+      <button id="pg-prev" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.35rem .8rem;cursor:pointer;font-size:.85rem">← Prev</button>
+      <span id="pg-info" style="color:var(--text-muted);font-size:.82rem"></span>
+      <button id="pg-next" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.35rem .8rem;cursor:pointer;font-size:.85rem">Next →</button>
+    </div>
+
+    <div id="tbl-loading" style="color:var(--text-muted);font-size:.85rem;margin-top:.5rem">Loading data…</div>
+  </section>
+
   <footer>
     TB Watch &mdash; Tuberculosis Genomic Surveillance &bull; Data from TB-Profiler / NCBI SRA
   </footer>
@@ -580,6 +640,157 @@ if (HAS_TL && TIMELINE.years) {
     });
   });
   render();
+})();
+/* ── Data Table ── */
+(function() {
+  const PAGE = 100;
+  let allRows = [], filtered = [], page = 0, sortCol = -1, sortAsc = true;
+
+  const DR_BADGE = {
+    'Sensitive':   '#16a34a', 'HR-TB': '#ca8a04', 'RR-TB': '#ea580c',
+    'MDR-TB':      '#dc2626', 'Pre-XDR-TB': '#991b1b', 'XDR-TB': '#450a0a',
+    'Other':       '#4b5563',
+  };
+
+  function parseCSV(text) {
+    const lines = text.split('\n');
+    const headers = lines[0].split(',');
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      // Handle quoted fields
+      const cols = [];
+      let cur = '', inQ = false;
+      for (const ch of line) {
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === ',' && !inQ) { cols.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+      cols.push(cur);
+      if (cols.length >= headers.length) rows.push(cols);
+    }
+    return rows;
+  }
+
+  function populateFilter(id, colIdx, rows) {
+    const sel = document.getElementById(id);
+    const vals = [...new Set(rows.map(r => r[colIdx]).filter(Boolean))].sort();
+    vals.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  }
+
+  function applyFilters() {
+    const q   = document.getElementById('tbl-search').value.toLowerCase();
+    const dr  = document.getElementById('flt-dr').value;
+    const lin = document.getElementById('flt-lin').value;
+    const cc  = document.getElementById('flt-cc').value;
+
+    filtered = allRows.filter(r => {
+      if (dr  && r[2] !== dr)  return false;
+      if (lin && r[4] !== lin) return false;
+      if (cc  && r[1] !== cc)  return false;
+      if (q) {
+        const haystack = r.join(' ').toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+
+    if (sortCol >= 0) {
+      filtered.sort((a, b) => {
+        const va = a[sortCol], vb = b[sortCol];
+        const na = parseFloat(va), nb = parseFloat(vb);
+        const cmp = !isNaN(na) && !isNaN(nb) ? na - nb : va.localeCompare(vb);
+        return sortAsc ? cmp : -cmp;
+      });
+    }
+
+    page = 0;
+    render();
+  }
+
+  function render() {
+    const tbody = document.getElementById('data-tbody');
+    tbody.innerHTML = '';
+    const start = page * PAGE;
+    const slice = filtered.slice(start, start + PAGE);
+    const total = filtered.length;
+
+    slice.forEach(r => {
+      const [id, cc, dr, lineage, linGrp, year, centre, geo, source, instr, avgLen] = r;
+      const color = DR_BADGE[dr] || '#4b5563';
+      const ncbiUrl = `https://www.ncbi.nlm.nih.gov/sra/${id}`;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><a href="${ncbiUrl}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-family:monospace;font-size:.82rem">${id}</a></td>
+        <td style="font-size:.85rem">${cc || ''}</td>
+        <td><span style="background:${color}33;color:${color};padding:.1rem .45rem;border-radius:4px;font-size:.75rem;font-weight:600">${dr || ''}</span></td>
+        <td style="font-size:.8rem;font-family:monospace">${lineage || ''}</td>
+        <td style="font-size:.82rem">${linGrp || ''}</td>
+        <td style="font-size:.85rem">${year || ''}</td>
+        <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${centre || ''}">${centre || ''}</td>
+        <td style="font-size:.8rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${geo || ''}">${geo || ''}</td>
+        <td style="font-size:.82rem">${source || ''}</td>
+        <td style="font-size:.8rem">${instr || ''}</td>
+        <td style="font-size:.82rem;text-align:right">${avgLen || ''}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('tbl-count').textContent =
+      `${total.toLocaleString()} samples`;
+    document.getElementById('pg-info').textContent =
+      `Page ${page + 1} of ${Math.max(1, Math.ceil(total / PAGE))}`;
+    document.getElementById('pg-prev').disabled = page === 0;
+    document.getElementById('pg-next').disabled = (page + 1) * PAGE >= total;
+  }
+
+  function init(rows) {
+    allRows  = rows;
+    filtered = rows;
+    document.getElementById('tbl-loading').style.display = 'none';
+
+    // DR filter — use fixed order
+    const drSel = document.getElementById('flt-dr');
+    DR_ORDER.forEach(dr => {
+      if (rows.some(r => r[2] === dr)) {
+        const opt = document.createElement('option');
+        opt.value = dr; opt.textContent = dr;
+        drSel.appendChild(opt);
+      }
+    });
+    populateFilter('flt-lin', 4, rows);  // lineage group
+    populateFilter('flt-cc',  1, rows);  // country
+
+    ['tbl-search','flt-dr','flt-lin','flt-cc'].forEach(id =>
+      document.getElementById(id).addEventListener('input', applyFilters));
+
+    document.getElementById('pg-prev').addEventListener('click', () => { page--; render(); });
+    document.getElementById('pg-next').addEventListener('click', () => { page++; render(); });
+
+    document.querySelectorAll('#data-tbl th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = +th.dataset.col;
+        if (sortCol === col) sortAsc = !sortAsc;
+        else { sortCol = col; sortAsc = true; }
+        document.querySelectorAll('#data-tbl th').forEach(t => t.classList.remove('asc','desc'));
+        th.classList.add(sortAsc ? 'asc' : 'desc');
+        applyFilters();
+      });
+    });
+
+    render();
+  }
+
+  fetch('data.csv')
+    .then(r => r.text())
+    .then(text => init(parseCSV(text)))
+    .catch(() => {
+      document.getElementById('tbl-loading').textContent = 'Could not load data.csv';
+    });
 })();
 </script>
 </body>
